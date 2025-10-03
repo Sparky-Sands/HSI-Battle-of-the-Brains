@@ -1,0 +1,220 @@
+import React, { useState, useEffect } from 'react';
+import { Search, ShoppingCart, Heart, User, TrendingUp, Clock, Star } from 'lucide-react';
+
+const EbayMarketplace = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [viewHistory, setViewHistory] = useState([]);
+  const [cart, setCart] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  const products = [
+    { id: 1, name: 'Vintage Camera', price: 299, category: 'electronics', image: '📷', views: 0, condition: 'Used' },
+    { id: 2, name: 'Designer Handbag', price: 850, category: 'fashion', image: '👜', views: 0, condition: 'New' },
+    { id: 3, name: 'Gaming Laptop', price: 1299, category: 'electronics', image: '💻', views: 0, condition: 'Refurbished' },
+    { id: 4, name: 'Leather Jacket', price: 450, category: 'fashion', image: '🧥', views: 0, condition: 'Used' },
+    { id: 5, name: 'Smartphone', price: 699, category: 'electronics', image: '📱', views: 0, condition: 'New' },
+    { id: 6, name: 'Running Shoes', price: 120, category: 'sports', image: '👟', views: 0, condition: 'New' },
+    { id: 7, name: 'Mechanical Keyboard', price: 180, category: 'electronics', image: '⌨️', views: 0, condition: 'New' },
+    { id: 8, name: 'Yoga Mat', price: 45, category: 'sports', image: '🧘', views: 0, condition: 'New' },
+    { id: 9, name: 'Sunglasses', price: 220, category: 'fashion', image: '🕶️', views: 0, condition: 'New' },
+    { id: 10, name: 'Wireless Headphones', price: 280, category: 'electronics', image: '🎧', views: 0, condition: 'New' },
+    { id: 11, name: 'Watch', price: 550, category: 'fashion', image: '⌚', views: 0, condition: 'Used' },
+    { id: 12, name: 'Bicycle', price: 890, category: 'sports', image: '🚴', views: 0, condition: 'Used' },
+  ];
+
+  const ads = [
+    { id: 'ad1', name: 'Premium Camera Lenses', price: 399, category: 'electronics', image: '📸', targetCategories: ['electronics'] },
+    { id: 'ad2', name: 'Designer Wallet', price: 250, category: 'fashion', image: '👛', targetCategories: ['fashion'] },
+    { id: 'ad3', name: 'Gaming Mouse', price: 89, category: 'electronics', image: '🖱️', targetCategories: ['electronics'] },
+    { id: 'ad4', name: 'Fitness Tracker', price: 199, category: 'sports', image: '⌚', targetCategories: ['sports', 'electronics'] },
+    { id: 'ad5', name: 'Luxury Perfume', price: 150, category: 'fashion', image: '💐', targetCategories: ['fashion'] },
+  ];
+
+  const handleProductView = (product) => {
+    const newHistory = [...viewHistory, { ...product, timestamp: Date.now() }];
+    setViewHistory(newHistory.slice(-10));
+  };
+
+  const getPersonalizedAds = () => {
+    if (viewHistory.length === 0) {
+      return ads.slice(0, 2);
+    }
+
+    const categoryCount = {};
+    viewHistory.forEach(item => {
+      categoryCount[item.category] = (categoryCount[item.category] || 0) + 1;
+    });
+
+    const sortedCategories = Object.entries(categoryCount)
+      .sort((a, b) => b[1] - a[1])
+      .map(([cat]) => cat);
+
+    const relevantAds = ads.filter(ad => 
+      ad.targetCategories.some(cat => sortedCategories.includes(cat))
+    );
+
+    return relevantAds.length > 0 ? relevantAds.slice(0, 2) : ads.slice(0, 2);
+  };
+
+  const filteredProducts = products.filter(p => 
+    (selectedCategory === 'all' || p.category === selectedCategory) &&
+    (searchTerm === '' || p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const personalizedAds = getPersonalizedAds();
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-bold text-blue-600">eBuy</h1>
+            <div className="flex gap-4">
+              <button className="p-2 hover:bg-gray-100 rounded-full">
+                <Heart size={24} />
+              </button>
+              <button className="p-2 hover:bg-gray-100 rounded-full relative">
+                <ShoppingCart size={24} />
+                {cart.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {cart.length}
+                  </span>
+                )}
+              </button>
+              <button className="p-2 hover:bg-gray-100 rounded-full">
+                <User size={24} />
+              </button>
+            </div>
+          </div>
+          
+          <div className="flex gap-2">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Search for anything"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              Search
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Categories */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          {['all', 'electronics', 'fashion', 'sports'].map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-4 py-2 rounded-full whitespace-nowrap ${
+                selectedCategory === cat
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white border hover:border-blue-500'
+              }`}
+            >
+              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        {/* Personalized Ads Section */}
+        {viewHistory.length > 0 && (
+          <div className="mb-8 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6 border-2 border-purple-200">
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp className="text-purple-600" size={24} />
+              <h2 className="text-xl font-bold text-gray-800">
+                Recommended For You
+              </h2>
+              <span className="text-sm text-gray-600 ml-2">
+                (Based on your browsing history)
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {personalizedAds.map(ad => (
+                <div key={ad.id} className="bg-white rounded-lg shadow-md p-4 border-2 border-purple-300 hover:shadow-lg transition-shadow">
+                  <div className="flex items-start gap-4">
+                    <div className="text-6xl">{ad.image}</div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded">
+                          SPONSORED
+                        </span>
+                      </div>
+                      <h3 className="font-semibold text-lg mb-1">{ad.name}</h3>
+                      <p className="text-2xl font-bold text-blue-600 mb-2">
+                        ${ad.price}
+                      </p>
+                      <button className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                        View Item
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recent Views */}
+        {viewHistory.length > 0 && (
+          <div className="mb-6 bg-white rounded-lg p-4 shadow">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock size={20} className="text-gray-600" />
+              <h3 className="font-semibold text-gray-800">Recently Viewed</h3>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {viewHistory.slice(-5).reverse().map((item, idx) => (
+                <div key={idx} className="flex flex-col items-center min-w-[80px]">
+                  <div className="text-3xl mb-1">{item.image}</div>
+                  <span className="text-xs text-gray-600 text-center">{item.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Products Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {filteredProducts.map(product => (
+            <div
+              key={product.id}
+              className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 cursor-pointer"
+              onClick={() => handleProductView(product)}
+            >
+              <div className="text-6xl mb-3 text-center">{product.image}</div>
+              <h3 className="font-semibold mb-2 text-sm">{product.name}</h3>
+              <div className="flex items-center gap-1 mb-2">
+                <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                <span className="text-xs text-gray-600">4.5 (234)</span>
+              </div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xl font-bold text-blue-600">${product.price}</p>
+                <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                  {product.condition}
+                </span>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCart([...cart, product]);
+                }}
+                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              >
+                Add to Cart
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default EbayMarketplace;
